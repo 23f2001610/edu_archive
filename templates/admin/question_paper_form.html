@@ -49,6 +49,11 @@
                 {% endfor %}
             </div>
             <div class="mb-3">
+                <label for="tag_ids" class="form-label">Tags (optional)</label>
+                {{ form.tag_ids(class="form-select", multiple=True, size="4") }}
+                <small class="text-muted">Hold Ctrl/Cmd to select multiple tags</small>
+            </div>
+            <div class="mb-3">
                 <label for="file" class="form-label">
                     {% if paper %}
                     Replace File (optional)

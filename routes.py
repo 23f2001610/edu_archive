@@ -5,9 +5,9 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 
 from app import app, db, login_manager
-from models import Admin, Course, Subject, Note, QuestionPaper
+from models import Admin, Course, Subject, Note, QuestionPaper, Tag
 from forms import (LoginForm, CourseForm, SubjectForm, NoteForm, NoteEditForm, 
-                   QuestionPaperForm, QuestionPaperEditForm)
+                   QuestionPaperForm, QuestionPaperEditForm, SearchForm, TagForm)
 
 
 @login_manager.user_loader
@@ -60,8 +60,18 @@ def index():
 
 @app.route('/notes')
 def notes():
+    tag_filter = request.args.get('tag')
     courses = Course.query.all()
-    return render_template('notes.html', courses=courses)
+    tags = Tag.query.order_by(Tag.name).all()
+    
+    filtered_notes = None
+    if tag_filter:
+        tag = Tag.query.filter_by(name=tag_filter).first()
+        if tag:
+            filtered_notes = tag.notes.order_by(Note.uploaded_at.desc()).all()
+    
+    return render_template('notes.html', courses=courses, tags=tags, 
+                           current_tag=tag_filter, filtered_notes=filtered_notes)
 
 
 @app.route('/notes/course/<int:course_id>')
@@ -82,6 +92,7 @@ def subject_notes(subject_id):
 def question_papers():
     semester_filter = request.args.get('semester', type=int)
     year_filter = request.args.get('year', type=int)
+    tag_filter = request.args.get('tag')
     
     query = QuestionPaper.query
     
@@ -89,6 +100,10 @@ def question_papers():
         query = query.filter_by(semester=semester_filter)
     if year_filter:
         query = query.filter_by(year=year_filter)
+    if tag_filter:
+        tag = Tag.query.filter_by(name=tag_filter).first()
+        if tag:
+            query = query.filter(QuestionPaper.tags.contains(tag))
     
     papers = query.order_by(QuestionPaper.year.desc(), QuestionPaper.semester).all()
     
@@ -98,13 +113,54 @@ def question_papers():
     semesters = db.session.query(QuestionPaper.semester).distinct().order_by(QuestionPaper.semester).all()
     semesters = [s[0] for s in semesters]
     
+    tags = Tag.query.order_by(Tag.name).all()
+    
     return render_template('question_papers.html', papers=papers, years=years, semesters=semesters,
-                           current_semester=semester_filter, current_year=year_filter)
+                           current_semester=semester_filter, current_year=year_filter,
+                           tags=tags, current_tag=tag_filter)
 
 
 @app.route('/download/<filename>')
 def download_file(filename):
+    note = Note.query.filter_by(filename=filename).first()
+    if note:
+        note.download_count = (note.download_count or 0) + 1
+        db.session.commit()
+    else:
+        paper = QuestionPaper.query.filter_by(filename=filename).first()
+        if paper:
+            paper.download_count = (paper.download_count or 0) + 1
+            db.session.commit()
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+
+
+@app.route('/search')
+def search():
+    query = request.args.get('q', '').strip()
+    if len(query) < 2:
+        flash('Please enter at least 2 characters to search', 'warning')
+        return redirect(url_for('index'))
+    
+    search_term = f"%{query}%"
+    
+    notes = Note.query.join(Subject).join(Course).filter(
+        db.or_(
+            Note.title.ilike(search_term),
+            Note.description.ilike(search_term),
+            Subject.name.ilike(search_term),
+            Course.name.ilike(search_term)
+        )
+    ).order_by(Note.uploaded_at.desc()).all()
+    
+    papers = QuestionPaper.query.join(Subject).join(Course).filter(
+        db.or_(
+            QuestionPaper.title.ilike(search_term),
+            Subject.name.ilike(search_term),
+            Course.name.ilike(search_term)
+        )
+    ).order_by(QuestionPaper.uploaded_at.desc()).all()
+    
+    return render_template('search_results.html', query=query, notes=notes, papers=papers)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -267,6 +323,7 @@ def admin_add_note():
     form = NoteForm()
     subjects = Subject.query.join(Course).order_by(Course.name, Subject.name).all()
     form.subject_id.choices = [(s.id, f"{s.course.name} - {s.name}") for s in subjects]
+    form.tag_ids.choices = [(t.id, t.name) for t in Tag.query.order_by(Tag.name).all()]
     
     if form.validate_on_submit():
         filename, original_filename, file_size = save_file(form.file.data)
@@ -279,6 +336,10 @@ def admin_add_note():
                 original_filename=original_filename,
                 file_size=file_size
             )
+            for tag_id in form.tag_ids.data:
+                tag = Tag.query.get(tag_id)
+                if tag:
+                    note.tags.append(tag)
             db.session.add(note)
             db.session.commit()
             flash('Note added successfully!', 'success')
@@ -294,11 +355,16 @@ def admin_edit_note(note_id):
     form = NoteEditForm(obj=note)
     subjects = Subject.query.join(Course).order_by(Course.name, Subject.name).all()
     form.subject_id.choices = [(s.id, f"{s.course.name} - {s.name}") for s in subjects]
+    form.tag_ids.choices = [(t.id, t.name) for t in Tag.query.order_by(Tag.name).all()]
+    
+    if request.method == 'GET':
+        form.tag_ids.data = [t.id for t in note.tags]
     
     if form.validate_on_submit():
         note.title = form.title.data
         note.description = form.description.data
         note.subject_id = form.subject_id.data
+        note.tags = [Tag.query.get(tid) for tid in form.tag_ids.data if Tag.query.get(tid)]
         
         if form.file.data:
             delete_file(note.filename)
@@ -338,6 +404,7 @@ def admin_add_question_paper():
     form = QuestionPaperForm()
     subjects = Subject.query.join(Course).order_by(Course.name, Subject.name).all()
     form.subject_id.choices = [(s.id, f"{s.course.name} - {s.name}") for s in subjects]
+    form.tag_ids.choices = [(t.id, t.name) for t in Tag.query.order_by(Tag.name).all()]
     
     if form.validate_on_submit():
         filename, original_filename, file_size = save_file(form.file.data)
@@ -352,6 +419,10 @@ def admin_add_question_paper():
                 original_filename=original_filename,
                 file_size=file_size
             )
+            for tag_id in form.tag_ids.data:
+                tag = Tag.query.get(tag_id)
+                if tag:
+                    paper.tags.append(tag)
             db.session.add(paper)
             db.session.commit()
             flash('Question paper added successfully!', 'success')
@@ -367,6 +438,10 @@ def admin_edit_question_paper(paper_id):
     form = QuestionPaperEditForm(obj=paper)
     subjects = Subject.query.join(Course).order_by(Course.name, Subject.name).all()
     form.subject_id.choices = [(s.id, f"{s.course.name} - {s.name}") for s in subjects]
+    form.tag_ids.choices = [(t.id, t.name) for t in Tag.query.order_by(Tag.name).all()]
+    
+    if request.method == 'GET':
+        form.tag_ids.data = [t.id for t in paper.tags]
     
     if form.validate_on_submit():
         paper.title = form.title.data
@@ -374,6 +449,7 @@ def admin_edit_question_paper(paper_id):
         paper.semester = form.semester.data
         paper.exam_type = form.exam_type.data
         paper.subject_id = form.subject_id.data
+        paper.tags = [Tag.query.get(tid) for tid in form.tag_ids.data if Tag.query.get(tid)]
         
         if form.file.data:
             delete_file(paper.filename)
@@ -398,3 +474,131 @@ def admin_delete_question_paper(paper_id):
     db.session.commit()
     flash('Question paper deleted successfully!', 'success')
     return redirect(url_for('admin_question_papers'))
+
+
+@app.route('/admin/analytics')
+@login_required
+def admin_analytics():
+    total_downloads = db.session.query(db.func.coalesce(db.func.sum(Note.download_count), 0)).scalar() + \
+                      db.session.query(db.func.coalesce(db.func.sum(QuestionPaper.download_count), 0)).scalar()
+    
+    top_notes = Note.query.order_by(Note.download_count.desc().nullslast()).limit(10).all()
+    top_papers = QuestionPaper.query.order_by(QuestionPaper.download_count.desc().nullslast()).limit(10).all()
+    
+    course_stats = db.session.query(
+        Course.name,
+        db.func.count(db.distinct(Subject.id)).label('subject_count'),
+        db.func.count(Note.id).label('note_count')
+    ).outerjoin(Subject).outerjoin(Note).group_by(Course.id).all()
+    
+    return render_template('admin/analytics.html', 
+                           total_downloads=total_downloads,
+                           top_notes=top_notes, 
+                           top_papers=top_papers,
+                           course_stats=course_stats)
+
+
+@app.route('/admin/tags')
+@login_required
+def admin_tags():
+    tags = Tag.query.order_by(Tag.name).all()
+    return render_template('admin/tags.html', tags=tags)
+
+
+@app.route('/admin/tags/add', methods=['GET', 'POST'])
+@login_required
+def admin_add_tag():
+    form = TagForm()
+    if form.validate_on_submit():
+        existing = Tag.query.filter(Tag.name.ilike(form.name.data.strip())).first()
+        if existing:
+            flash('A tag with this name already exists', 'warning')
+        else:
+            tag = Tag(name=form.name.data.strip())
+            db.session.add(tag)
+            db.session.commit()
+            flash('Tag added successfully!', 'success')
+            return redirect(url_for('admin_tags'))
+    return render_template('admin/tag_form.html', form=form, title='Add Tag')
+
+
+@app.route('/admin/tags/edit/<int:tag_id>', methods=['GET', 'POST'])
+@login_required
+def admin_edit_tag(tag_id):
+    tag = Tag.query.get_or_404(tag_id)
+    form = TagForm(obj=tag)
+    if form.validate_on_submit():
+        existing = Tag.query.filter(Tag.name.ilike(form.name.data.strip()), Tag.id != tag_id).first()
+        if existing:
+            flash('A tag with this name already exists', 'warning')
+        else:
+            tag.name = form.name.data.strip()
+            db.session.commit()
+            flash('Tag updated successfully!', 'success')
+            return redirect(url_for('admin_tags'))
+    return render_template('admin/tag_form.html', form=form, title='Edit Tag')
+
+
+@app.route('/admin/tags/delete/<int:tag_id>', methods=['POST'])
+@login_required
+def admin_delete_tag(tag_id):
+    tag = Tag.query.get_or_404(tag_id)
+    db.session.delete(tag)
+    db.session.commit()
+    flash('Tag deleted successfully!', 'success')
+    return redirect(url_for('admin_tags'))
+
+
+@app.route('/admin/bulk-upload', methods=['GET', 'POST'])
+@login_required
+def admin_bulk_upload():
+    subjects = Subject.query.join(Course).order_by(Course.name, Subject.name).all()
+    subject_choices = [(s.id, f"{s.course.name} - {s.name}") for s in subjects]
+    
+    if request.method == 'POST':
+        resource_type = request.form.get('resource_type')
+        subject_id = request.form.get('subject_id', type=int)
+        files = request.files.getlist('files')
+        
+        if not subject_id:
+            flash('Please select a subject', 'danger')
+            return redirect(url_for('admin_bulk_upload'))
+        
+        if not files or files[0].filename == '':
+            flash('Please select at least one file', 'danger')
+            return redirect(url_for('admin_bulk_upload'))
+        
+        success_count = 0
+        for file in files:
+            if file and allowed_file(file.filename):
+                filename, original_filename, file_size = save_file(file)
+                if filename:
+                    if resource_type == 'notes':
+                        title = original_filename.rsplit('.', 1)[0]
+                        note = Note(
+                            title=title,
+                            subject_id=subject_id,
+                            filename=filename,
+                            original_filename=original_filename,
+                            file_size=file_size
+                        )
+                        db.session.add(note)
+                    else:
+                        title = original_filename.rsplit('.', 1)[0]
+                        paper = QuestionPaper(
+                            title=title,
+                            year=2024,
+                            semester=1,
+                            subject_id=subject_id,
+                            filename=filename,
+                            original_filename=original_filename,
+                            file_size=file_size
+                        )
+                        db.session.add(paper)
+                    success_count += 1
+        
+        db.session.commit()
+        flash(f'Successfully uploaded {success_count} files!', 'success')
+        return redirect(url_for('admin_bulk_upload'))
+    
+    return render_template('admin/bulk_upload.html', subjects=subject_choices)

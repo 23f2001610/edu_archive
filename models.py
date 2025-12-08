@@ -52,6 +52,8 @@ class Note(db.Model):
     file_size = db.Column(db.Integer)
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    download_count = db.Column(db.Integer, default=0)
+    tags = db.relationship('Tag', secondary='note_tags', backref=db.backref('notes', lazy='dynamic'))
 
     def __repr__(self):
         return f'<Note {self.title}>'
@@ -68,6 +70,29 @@ class QuestionPaper(db.Model):
     file_size = db.Column(db.Integer)
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    download_count = db.Column(db.Integer, default=0)
+    tags = db.relationship('Tag', secondary='paper_tags', backref=db.backref('papers', lazy='dynamic'))
 
     def __repr__(self):
         return f'<QuestionPaper {self.title} - {self.year}>'
+
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Tag {self.name}>'
+
+
+note_tags = db.Table('note_tags',
+    db.Column('note_id', db.Integer, db.ForeignKey('note.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
+
+paper_tags = db.Table('paper_tags',
+    db.Column('paper_id', db.Integer, db.ForeignKey('question_paper.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)

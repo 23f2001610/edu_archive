@@ -37,6 +37,14 @@
                         </a>
                     </li>
                 </ul>
+                <form class="d-flex me-3" action="{{ url_for('search') }}" method="GET">
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-sm" name="q" placeholder="Search resources..." value="{{ request.args.get('q', '') }}" style="min-width: 200px;">
+                        <button class="btn btn-light btn-sm" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">

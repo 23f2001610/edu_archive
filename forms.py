@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
-from wtforms import StringField, PasswordField, TextAreaField, IntegerField, SelectField
+from wtforms import StringField, PasswordField, TextAreaField, IntegerField, SelectField, SelectMultipleField
 from wtforms.validators import DataRequired, Length, NumberRange
 
 
@@ -24,6 +24,7 @@ class NoteForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=200)])
     description = TextAreaField('Description')
     subject_id = SelectField('Subject', coerce=int, validators=[DataRequired()])
+    tag_ids = SelectMultipleField('Tags', coerce=int)
     file = FileField('File', validators=[
         FileRequired(),
         FileAllowed(['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt'], 'Only PDF, Word, PowerPoint and Text files allowed!')
@@ -34,6 +35,7 @@ class NoteEditForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=200)])
     description = TextAreaField('Description')
     subject_id = SelectField('Subject', coerce=int, validators=[DataRequired()])
+    tag_ids = SelectMultipleField('Tags', coerce=int)
     file = FileField('Replace File (optional)', validators=[
         FileAllowed(['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt'], 'Only PDF, Word, PowerPoint and Text files allowed!')
     ])
@@ -51,6 +53,7 @@ class QuestionPaperForm(FlaskForm):
         ('other', 'Other')
     ])
     subject_id = SelectField('Subject', coerce=int, validators=[DataRequired()])
+    tag_ids = SelectMultipleField('Tags', coerce=int)
     file = FileField('File', validators=[
         FileRequired(),
         FileAllowed(['pdf', 'doc', 'docx'], 'Only PDF and Word files allowed!')
@@ -69,6 +72,15 @@ class QuestionPaperEditForm(FlaskForm):
         ('other', 'Other')
     ])
     subject_id = SelectField('Subject', coerce=int, validators=[DataRequired()])
+    tag_ids = SelectMultipleField('Tags', coerce=int)
     file = FileField('Replace File (optional)', validators=[
         FileAllowed(['pdf', 'doc', 'docx'], 'Only PDF and Word files allowed!')
     ])
+
+
+class SearchForm(FlaskForm):
+    query = StringField('Search', validators=[DataRequired(), Length(min=2, max=100)])
+
+
+class TagForm(FlaskForm):
+    name = StringField('Tag Name', validators=[DataRequired(), Length(min=2, max=50)])

@@ -13,6 +13,58 @@
 <h2 class="mb-4"><i class="fas fa-book me-2 text-primary"></i>Course Notes</h2>
 <p class="text-muted mb-4">Select a course to view available notes</p>
 
+{% if tags %}
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <h6 class="mb-3"><i class="fas fa-tags me-2"></i>Filter by Tag</h6>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('notes') }}" class="btn btn-sm {% if not current_tag %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                All
+            </a>
+            {% for tag in tags %}
+            <a href="{{ url_for('notes', tag=tag.name) }}" 
+               class="btn btn-sm {% if current_tag == tag.name %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                {{ tag.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if filtered_notes is not none %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Notes tagged "{{ current_tag }}" ({{ filtered_notes|length }})</h5>
+    </div>
+    <div class="card-body">
+        {% if filtered_notes %}
+        <div class="list-group">
+            {% for note in filtered_notes %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1">{{ note.title }}</h6>
+                    <p class="mb-1 small">
+                        <span class="badge bg-secondary">{{ note.subject.course.name }}</span>
+                        <span class="badge bg-info">{{ note.subject.name }}</span>
+                    </p>
+                    <small class="text-muted">{{ note.file_size|format_size }}</small>
+                </div>
+                <a href="{{ url_for('download_file', filename=note.filename) }}" class="btn btn-sm btn-primary" download="{{ note.original_filename }}">
+                    <i class="fas fa-download"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-3">No notes with this tag.</p>
+        {% endif %}
+    </div>
+</div>
+
+<h4 class="mb-3"><i class="fas fa-folder me-2"></i>Browse by Course</h4>
+{% endif %}
+
 <div class="row">
     {% if courses %}
     {% for course in courses %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - {{ query }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                <li class="breadcrumb-item active">Search Results</li>
+            </ol>
+        </nav>
+        <h1 class="display-6">
+            <i class="fas fa-search text-primary me-2"></i>
+            Search Results for "{{ query }}"
+        </h1>
+        <p class="text-muted">Found {{ notes|length }} notes and {{ papers|length }} question papers</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-book me-2"></i>Notes ({{ notes|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if notes %}
+                <div class="list-group list-group-flush">
+                    {% for note in notes %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ note.title }}</h6>
+                                <p class="mb-1 text-muted small">
+                                    <span class="badge bg-secondary me-1">{{ note.subject.course.name }}</span>
+                                    <span class="badge bg-info">{{ note.subject.name }}</span>
+                                </p>
+                                {% if note.description %}
+                                <p class="mb-1 small text-muted">{{ note.description[:100] }}{% if note.description|length > 100 %}...{% endif %}</p>
+                                {% endif %}
+                                <small class="text-muted">
+                                    <i class="fas fa-file me-1"></i>{{ note.original_filename }} ({{ note.file_size|format_size }})
+                                </small>
+                            </div>
+                            <a href="{{ url_for('download_file', filename=note.filename) }}" class="btn btn-sm btn-outline-primary ms-2" download="{{ note.original_filename }}">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No notes found matching your search.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Question Papers ({{ papers|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if papers %}
+                <div class="list-group list-group-flush">
+                    {% for paper in papers %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ paper.title }}</h6>
+                                <p class="mb-1 text-muted small">
+                                    <span class="badge bg-secondary me-1">{{ paper.subject.course.name }}</span>
+                                    <span class="badge bg-info me-1">{{ paper.subject.name }}</span>
+                                    <span class="badge bg-warning text-dark">{{ paper.year }}</span>
+                                </p>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>Semester {{ paper.semester }} |
+                                    <i class="fas fa-tag me-1"></i>{{ paper.exam_type|title if paper.exam_type else 'N/A' }} |
+                                    <i class="fas fa-file me-1"></i>{{ paper.file_size|format_size }}
+                                </small>
+                            </div>
+                            <a href="{{ url_for('download_file', filename=paper.filename) }}" class="btn btn-sm btn-outline-success ms-2" download="{{ paper.original_filename }}">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No question papers found matching your search.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col text-center">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Home
+        </a>
+    </div>
+</div>
+{% endblock %}

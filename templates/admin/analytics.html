@@ -1,0 +1,160 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Analytics - Admin Dashboard{% endblock %}
+
+{% block admin_content %}
+<h3 class="mb-4"><i class="fas fa-chart-bar me-2"></i>Analytics Dashboard</h3>
+
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card bg-gradient shadow text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-download fa-3x mb-3"></i>
+                <h2 class="mb-0">{{ total_downloads }}</h2>
+                <p class="mb-0">Total Downloads</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card bg-gradient shadow text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-file-alt fa-3x mb-3"></i>
+                <h2 class="mb-0">{{ top_notes|length }}</h2>
+                <p class="mb-0">Notes with Downloads</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card bg-gradient shadow text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                <h2 class="mb-0">{{ top_papers|length }}</h2>
+                <p class="mb-0">Papers with Downloads</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-star me-2"></i>Top Downloaded Notes</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if top_notes %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Subject</th>
+                                <th class="text-center">Downloads</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for note in top_notes %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ note.title[:30] }}{% if note.title|length > 30 %}...{% endif %}</td>
+                                <td><span class="badge bg-info">{{ note.subject.name }}</span></td>
+                                <td class="text-center">
+                                    <span class="badge bg-success">{{ note.download_count or 0 }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-chart-line fa-3x mb-2"></i>
+                    <p>No download data yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Top Downloaded Question Papers</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if top_papers %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Year</th>
+                                <th class="text-center">Downloads</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for paper in top_papers %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ paper.title[:30] }}{% if paper.title|length > 30 %}...{% endif %}</td>
+                                <td><span class="badge bg-warning text-dark">{{ paper.year }}</span></td>
+                                <td class="text-center">
+                                    <span class="badge bg-success">{{ paper.download_count or 0 }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-chart-line fa-3x mb-2"></i>
+                    <p>No download data yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-university me-2"></i>Course Statistics</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if course_stats %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Course</th>
+                                <th class="text-center">Subjects</th>
+                                <th class="text-center">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in course_stats %}
+                            <tr>
+                                <td>{{ stat[0] }}</td>
+                                <td class="text-center"><span class="badge bg-info">{{ stat[1] }}</span></td>
+                                <td class="text-center"><span class="badge bg-success">{{ stat[2] }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-info-circle fa-3x mb-2"></i>
+                    <p>No course data available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

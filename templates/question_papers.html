@@ -15,7 +15,7 @@
 <div class="card mb-4 shadow-sm">
     <div class="card-body">
         <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label">Filter by Semester</label>
                 <select name="semester" class="form-select">
                     <option value="">All Semesters</option>
@@ -24,7 +24,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label">Filter by Year</label>
                 <select name="year" class="form-select">
                     <option value="">All Years</option>
@@ -33,9 +33,18 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <label class="form-label">Filter by Tag</label>
+                <select name="tag" class="form-select">
+                    <option value="">All Tags</option>
+                    {% for tag in tags %}
+                    <option value="{{ tag.name }}" {% if current_tag == tag.name %}selected{% endif %}>{{ tag.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
                 <button type="submit" class="btn btn-primary me-2">
-                    <i class="fas fa-filter me-1"></i> Apply Filter
+                    <i class="fas fa-filter me-1"></i> Apply
                 </button>
                 <a href="{{ url_for('question_papers') }}" class="btn btn-outline-secondary">
                     <i class="fas fa-times me-1"></i> Clear
