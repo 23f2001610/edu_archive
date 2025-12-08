@@ -1,0 +1,56 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Manage Subjects - Admin{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-book me-2"></i>Manage Subjects</h3>
+    <a href="{{ url_for('admin_add_subject') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i> Add Subject
+    </a>
+</div>
+
+{% if subjects %}
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Subject Name</th>
+                    <th>Course</th>
+                    <th>Semester</th>
+                    <th>Notes</th>
+                    <th>Papers</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subject in subjects %}
+                <tr>
+                    <td><strong>{{ subject.name }}</strong></td>
+                    <td><span class="badge bg-info">{{ subject.course.name }}</span></td>
+                    <td>Semester {{ subject.semester }}</td>
+                    <td><span class="badge bg-success">{{ subject.notes|length }}</span></td>
+                    <td><span class="badge bg-warning text-dark">{{ subject.question_papers|length }}</span></td>
+                    <td>
+                        <a href="{{ url_for('admin_edit_subject', subject_id=subject.id) }}" class="btn btn-sm btn-outline-primary me-1">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form action="{{ url_for('admin_delete_subject', subject_id=subject.id) }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure? This will delete all notes and question papers under this subject.')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>No subjects yet. <a href="{{ url_for('admin_add_subject') }}">Add your first subject</a>.
+</div>
+{% endif %}
+{% endblock %}

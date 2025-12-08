@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ subject.name }} - Notes{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('notes') }}">Notes</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('course_subjects', course_id=subject.course.id) }}">{{ subject.course.name }}</a></li>
+        <li class="breadcrumb-item active">{{ subject.name }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-book me-2 text-primary"></i>{{ subject.name }}</h2>
+        <p class="text-muted mb-0">{{ subject.course.name }} | Semester {{ subject.semester }}</p>
+    </div>
+    <a href="{{ url_for('course_subjects', course_id=subject.course.id) }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Subjects
+    </a>
+</div>
+
+{% if notes %}
+<div class="card shadow-sm">
+    <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Available Notes ({{ notes|length }})</h5>
+    </div>
+    <div class="list-group list-group-flush">
+        {% for note in notes %}
+        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+            <div class="d-flex align-items-center">
+                {% set ext = note.original_filename.rsplit('.', 1)[-1].lower() %}
+                {% if ext == 'pdf' %}
+                <i class="fas fa-file-pdf text-danger fa-2x me-3"></i>
+                {% elif ext in ['doc', 'docx'] %}
+                <i class="fas fa-file-word text-primary fa-2x me-3"></i>
+                {% elif ext in ['ppt', 'pptx'] %}
+                <i class="fas fa-file-powerpoint text-warning fa-2x me-3"></i>
+                {% else %}
+                <i class="fas fa-file text-secondary fa-2x me-3"></i>
+                {% endif %}
+                <div>
+                    <h6 class="mb-1">{{ note.title }}</h6>
+                    {% if note.description %}
+                    <p class="text-muted mb-1 small">{{ note.description }}</p>
+                    {% endif %}
+                    <small class="text-muted">
+                        <i class="fas fa-file me-1"></i>{{ note.original_filename }} | 
+                        <i class="fas fa-weight me-1"></i>{{ note.file_size|format_size }} | 
+                        <i class="fas fa-calendar me-1"></i>{{ note.uploaded_at.strftime('%b %d, %Y') }}
+                    </small>
+                </div>
+            </div>
+            <a href="{{ url_for('download_file', filename=note.filename) }}" 
+               class="btn btn-primary" 
+               download="{{ note.original_filename }}">
+                <i class="fas fa-download me-1"></i> Download
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>No notes available for this subject yet.
+</div>
+{% endif %}
+{% endblock %}

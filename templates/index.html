@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Academic Resource Portal{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center py-5 mb-5 bg-light rounded-3">
+    <h1 class="display-5 fw-bold text-primary mb-3">
+        <i class="fas fa-graduation-cap me-2"></i>Academic Resource Portal
+    </h1>
+    <p class="lead text-muted mb-4">Access notes and previous year question papers for all courses</p>
+    <div class="d-flex justify-content-center gap-3">
+        <a href="{{ url_for('notes') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-book me-2"></i>Browse Notes
+        </a>
+        <a href="{{ url_for('question_papers') }}" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-file-alt me-2"></i>Question Papers
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recently Added Notes</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_notes %}
+                <ul class="list-group list-group-flush">
+                    {% for note in recent_notes %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-file-pdf text-danger me-2"></i>
+                            <strong>{{ note.title }}</strong>
+                            <br>
+                            <small class="text-muted">{{ note.subject.course.name }} - {{ note.subject.name }}</small>
+                        </div>
+                        <a href="{{ url_for('download_file', filename=note.filename) }}" class="btn btn-sm btn-outline-primary" download="{{ note.original_filename }}">
+                            <i class="fas fa-download"></i>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">No notes available yet.</p>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('notes') }}" class="text-primary">View all notes <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recently Added Question Papers</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_papers %}
+                <ul class="list-group list-group-flush">
+                    {% for paper in recent_papers %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-file-alt text-success me-2"></i>
+                            <strong>{{ paper.title }}</strong>
+                            <br>
+                            <small class="text-muted">{{ paper.year }} | Semester {{ paper.semester }} | {{ paper.subject.name }}</small>
+                        </div>
+                        <a href="{{ url_for('download_file', filename=paper.filename) }}" class="btn btn-sm btn-outline-success" download="{{ paper.original_filename }}">
+                            <i class="fas fa-download"></i>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">No question papers available yet.</p>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('question_papers') }}" class="text-success">View all question papers <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <h3 class="mb-4"><i class="fas fa-university me-2"></i>Available Courses</h3>
+    </div>
+    {% if courses %}
+    {% for course in courses %}
+    <div class="col-md-4 mb-4">
+        <div class="card course-card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-book-open text-primary me-2"></i>{{ course.name }}
+                </h5>
+                <p class="card-text text-muted">{{ course.description or 'No description available' }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-secondary">{{ course.subjects|length }} Subjects</span>
+                    <a href="{{ url_for('course_subjects', course_id=course.id) }}" class="btn btn-sm btn-primary">
+                        View <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>No courses available yet. Please check back later.
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

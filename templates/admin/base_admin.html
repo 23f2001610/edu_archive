@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <i class="fas fa-cog me-2"></i>Admin Panel
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </a>
+                <a href="{{ url_for('admin_courses') }}" class="list-group-item list-group-item-action {% if 'course' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-university me-2"></i>Manage Courses
+                </a>
+                <a href="{{ url_for('admin_subjects') }}" class="list-group-item list-group-item-action {% if 'subject' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-book me-2"></i>Manage Subjects
+                </a>
+                <a href="{{ url_for('admin_notes') }}" class="list-group-item list-group-item-action {% if 'note' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-file-alt me-2"></i>Manage Notes
+                </a>
+                <a href="{{ url_for('admin_question_papers') }}" class="list-group-item list-group-item-action {% if 'question_paper' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-clipboard-list me-2"></i>Manage Question Papers
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9">
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

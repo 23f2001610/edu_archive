@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.name }} - Notes{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('notes') }}">Notes</a></li>
+        <li class="breadcrumb-item active">{{ course.name }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-folder-open me-2 text-warning"></i>{{ course.name }}</h2>
+    <a href="{{ url_for('notes') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Courses
+    </a>
+</div>
+
+{% if course.description %}
+<p class="text-muted mb-4">{{ course.description }}</p>
+{% endif %}
+
+<div class="row">
+    {% if subjects %}
+    {% for subject in subjects %}
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-book text-primary me-2"></i>{{ subject.name }}
+                    </h5>
+                    <span class="badge bg-info">Semester {{ subject.semester }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted">
+                        <i class="fas fa-file me-1"></i>{{ subject.notes|length }} Notes
+                    </span>
+                    <a href="{{ url_for('subject_notes', subject_id=subject.id) }}" class="btn btn-primary">
+                        View Notes <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>No subjects available for this course yet.
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

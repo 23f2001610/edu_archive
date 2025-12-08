@@ -1,0 +1,62 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-file-alt me-2"></i>{{ title }}</h3>
+    <a href="{{ url_for('admin_notes') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                <label for="title" class="form-label">Title *</label>
+                {{ form.title(class="form-control", placeholder="e.g., Chapter 1 - Introduction to Algorithms") }}
+                {% for error in form.title.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                {{ form.description(class="form-control", rows="3", placeholder="Brief description of the note content") }}
+            </div>
+            <div class="mb-3">
+                <label for="subject_id" class="form-label">Subject *</label>
+                {{ form.subject_id(class="form-select") }}
+                {% for error in form.subject_id.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                <label for="file" class="form-label">
+                    {% if note %}
+                    Replace File (optional)
+                    {% else %}
+                    File *
+                    {% endif %}
+                </label>
+                <div class="input-group">
+                    {{ form.file(class="form-control") }}
+                </div>
+                <small class="text-muted">Allowed: PDF, DOC, DOCX, PPT, PPTX, TXT (Max 50MB)</small>
+                {% for error in form.file.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+                {% if note %}
+                <div class="mt-2">
+                    <small class="text-muted">Current file: <strong>{{ note.original_filename }}</strong></small>
+                </div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i> Save Note
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Admin Dashboard - Academic Resource Portal{% endblock %}
+
+{% block admin_content %}
+<h3 class="mb-4"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h3>
+
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white shadow">
+            <div class="card-body text-center">
+                <i class="fas fa-university fa-2x mb-2"></i>
+                <h4 class="mb-0">{{ total_courses }}</h4>
+                <small>Courses</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white shadow">
+            <div class="card-body text-center">
+                <i class="fas fa-book fa-2x mb-2"></i>
+                <h4 class="mb-0">{{ total_subjects }}</h4>
+                <small>Subjects</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white shadow">
+            <div class="card-body text-center">
+                <i class="fas fa-file-alt fa-2x mb-2"></i>
+                <h4 class="mb-0">{{ total_notes }}</h4>
+                <small>Notes</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-dark shadow">
+            <div class="card-body text-center">
+                <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                <h4 class="mb-0">{{ total_papers }}</h4>
+                <small>Question Papers</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h5><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+        <div class="btn-group">
+            <a href="{{ url_for('admin_add_course') }}" class="btn btn-outline-primary">
+                <i class="fas fa-plus me-1"></i> Add Course
+            </a>
+            <a href="{{ url_for('admin_add_subject') }}" class="btn btn-outline-info">
+                <i class="fas fa-plus me-1"></i> Add Subject
+            </a>
+            <a href="{{ url_for('admin_add_note') }}" class="btn btn-outline-success">
+                <i class="fas fa-upload me-1"></i> Upload Note
+            </a>
+            <a href="{{ url_for('admin_add_question_paper') }}" class="btn btn-outline-warning">
+                <i class="fas fa-upload me-1"></i> Upload Question Paper
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Notes</h6>
+            </div>
+            <div class="list-group list-group-flush">
+                {% if recent_notes %}
+                {% for note in recent_notes %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ note.title }}</strong><br>
+                        <small class="text-muted">{{ note.subject.name }} - {{ note.uploaded_at.strftime('%b %d, %Y') }}</small>
+                    </div>
+                    <a href="{{ url_for('admin_edit_note', note_id=note.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="list-group-item text-muted">No notes uploaded yet</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Question Papers</h6>
+            </div>
+            <div class="list-group list-group-flush">
+                {% if recent_papers %}
+                {% for paper in recent_papers %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ paper.title }}</strong><br>
+                        <small class="text-muted">{{ paper.year }} | Sem {{ paper.semester }} - {{ paper.uploaded_at.strftime('%b %d, %Y') }}</small>
+                    </div>
+                    <a href="{{ url_for('admin_edit_question_paper', paper_id=paper.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="list-group-item text-muted">No question papers uploaded yet</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
